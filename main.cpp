@@ -37,30 +37,39 @@ int main()
         std::cerr << "Imagem carregada" << std::endl;
     }
 
-    // int posicao_x =10;
-    // int posicao_y = 20;
+    std::string mensagem;
+    std::cout << "Digite sua mensagem: ";
+    std::cin.ignore();
+    std::getline(std::cin, mensagem);
+    std::cout << mensagem<< std::endl;
 
-    // int indice_pixel = (posicao_x * largura + posicao_y)*canais;
-    // std::cerr << indice_pixel << std::endl;
+    int indice_mensagem = 0;
+    for (int i = 0; i < largura * altura * canais; ++i)
+    {   
+        std::cout << mensagem[indice_mensagem] << std::endl;
+        if (indice_mensagem <= mensagem.length())
+        {
+            unsigned char bit_mensagem = (mensagem[indice_mensagem] >> (7 - (i % 8))) & 1;
+            dados_imagem[i] = (dados_imagem[i] & 0xFE) | bit_mensagem;
+            ++indice_mensagem;
+        }
+        else
+        {
+            break;
+        }
+         
+    }
+    const char* nova_imagem = "C:/src/c++/esteganografia_BMP/imagem_modificada.bmp";
+     int resultado = stbi_write_bmp(nova_imagem, largura, altura, canais, dados_imagem);
 
-    // unsigned char valor_canal_vermelho = dados_imagem[indice_pixel];
-
-    // std::cout << "Valor do canal vermelho (R) do pixel na posição (" << posicao_x << ", " << posicao_y << "): " << static_cast<int>(valor_canal_vermelho) << std::endl;
-
-
-    // const char *nova_imagem_bmp = "C:/src/c++/esteganografia_BMP/nova_imagem.bmp"; // Substitua pelo caminho e nome desejado do novo arquivo BMP.
-
-    // if (!stbi_write_bmp(nova_imagem_bmp, largura, altura, canais, dados_imagem))
-    // {
-    //     std::cerr << "Erro ao salvar a imagem em um novo arquivo BMP" << std::endl;
-    // }
-    // else
-    // {
-    //     std::cout << "Imagem salva com sucesso em " << nova_imagem_bmp << std::endl;
-    //     std::cout << "largura " << largura << std::endl;
-    //     std::cout << "altura " << altura << std::endl;
-    //     std::cout << "canais " << canais << std::endl;
-    // }
+    if (resultado != 0)
+    {
+        std::cout << "Mensagem escondida na imagem com sucesso." << std::endl;
+    }
+    else
+    {
+        std::cout << "Erro ao salvar a imagem com a mensagem." << std::endl;
+    }
 
     stbi_image_free(dados_imagem);
     return 0;
