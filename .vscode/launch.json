@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/src/c++/esteganografia_BMP2",
-      "program": "c:/src/c++/esteganografia_BMP2/build/Debug/outDebug",
+      "cwd": "c:/src/c++/esteganografia_BMP",
+      "program": "c:/src/c++/esteganografia_BMP/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
