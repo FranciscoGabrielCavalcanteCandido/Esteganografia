@@ -2,9 +2,26 @@
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include "C:\src\c++\esteganografia_BMP\stb-master\stb_image.h"
-
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "C:\src\c++\esteganografia_BMP\stb-master\stb_image_write.h"
+
+using namespace std;
+
+template <typename T>
+inline T extract_bits(const T v, const uint32_t bstart, const uint32_t blength)
+{
+    const T mask = (1 << blength) - 1;
+
+    return (v >> bstart) & mask;
+}
+
+template <typename T>
+inline T set_bits(const T v, const uint32_t bstart, const uint32_t blength, const T bits)
+{
+    const T mask = ((1 << blength) - 1) << bstart;
+
+    return (v & ~mask) | (bits << bstart);
+}
 
 bool carregarImagem(const char *arquivo_imagem, int &largura, int &altura, int &canais, unsigned char *&dados)
 {
@@ -21,21 +38,39 @@ bool carregarImagem(const char *arquivo_imagem, int &largura, int &altura, int &
     }
 }
 
-bool ocultarMensagemNaImagem(unsigned char *dados, int largura, int altura, int canais, const std::string &mensagem)
+bool ocultarMensagemNaImagem(unsigned char *dados, int largura, int altura, int canais, char *mensagem)
 {
     int indice_mensagem = 0;
-    for (int i = 0; i < largura * altura * canais; ++i)
+    int tamanho_mensagem = strlen(mensagem);
+
+    for (int i = 0; i < largura * altura * canais; i+= canais)
     {
-        if (indice_mensagem < mensagem.length())
+
+        unsigned char vermelho = dados[i];
+        unsigned char verde = dados[i + 1];
+        unsigned char azul = dados[i + 2];
+        if (indice_mensagem <= tamanho_mensagem)
         {
-            unsigned char bit_mensagem = (mensagem[indice_mensagem] >> (7 - (i % 8))) & 1;
-            dados[i] = (dados[i] & 0xFE) | bit_mensagem;
-            ++indice_mensagem;
+            unsigned char caractere;
+            caractere = mensagem[indice_mensagem];
+            unsigned char parte_mensagem = extract_bits(caractere, 0, 2);
+
+            verde = set_bits(verde, 0, 2, parte_mensagem);
+
+            dados[i + 1] = verde;
+
+            if (indice_mensagem == tamanho_mensagem)
+            {
+               
+                break;
+            }
         }
         else
         {
             break;
         }
+
+        indice_mensagem++;
     }
     return true;
 }
@@ -55,39 +90,6 @@ bool salvarImagemComMensagem(const char *nova_imagem, int largura, int altura, i
     }
 }
 
-std::string recuperar_mensagem_da_imagem(const unsigned char *dados_imagem, int largura, int altura, int canais)
-{
-    std::string mensagem;
-    char caractere = 0;
-    int bit_atual = 0;
-
-    for (int i = 0; i < largura * altura * canais; ++i)
-    {
-        // Extrai o bit menos significativo do canal de cor
-        unsigned char bit_mensagem = dados_imagem[i] & 1;
-
-        // Adiciona o bit ao caractere (7 bits formam um caractere, o 8º bit é sempre 0)
-        caractere = (caractere << 1) | bit_mensagem;
-
-        // Incrementa o índice do bit atual
-        ++bit_atual;
-
-        // Se formou um caractere completo, adiciona à mensagem
-        if (bit_atual == 7)
-        {
-            mensagem.push_back(caractere);
-            caractere = 0;
-            bit_atual = 0;
-
-            // Se o último caractere for '\0', termina a leitura da mensagem
-            if (mensagem.back() == '\0')
-                break;
-        }
-    }
-
-    return mensagem;
-}
-
 int main()
 {
     int largura, altura, canais;
@@ -99,8 +101,9 @@ int main()
         return 1;
     }
 
-    std::string mensagem_ocultar = "ola";
-    mensagem_ocultar.push_back('\0');
+    char *mensagem_ocultar = new char[256];
+    cout << "Informe a mensagem que deseja esconder: ";
+    cin.getline(mensagem_ocultar, 256);
 
     if (ocultarMensagemNaImagem(dados, largura, altura, canais, mensagem_ocultar))
     {
@@ -108,18 +111,5 @@ int main()
         salvarImagemComMensagem(nova_imagem, largura, altura, canais, dados);
     }
 
-    std::string mensagem_escondida = recuperar_mensagem_da_imagem(dados, largura, altura, canais);
-
-    // Imprimir a mensagem
-    if (mensagem_escondida.empty())
-    {
-        std::cout << "Nenhuma mensagem encontrada na imagem." << std::endl;
-    }
-    else
-    {
-        std::cout << "Mensagem: " << mensagem_escondida << std::endl;
-    }
-
     stbi_image_free(dados);
-   
 }
