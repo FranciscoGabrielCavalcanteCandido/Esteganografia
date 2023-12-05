@@ -42,10 +42,10 @@ bool ocultarMensagemNaImagem(unsigned char *dados, int largura, int altura, int 
 {
     int indice_mensagem = 0;
     int tamanho_mensagem = strlen(mensagem);
+    dados[0] = tamanho_mensagem;
 
-    for (int i = 0; i < largura * altura * canais; i+= canais)
+    for (int i = canais; i < largura * altura * canais; i += canais)
     {
-
         unsigned char vermelho = dados[i];
         unsigned char verde = dados[i + 1];
         unsigned char azul = dados[i + 2];
@@ -53,15 +53,22 @@ bool ocultarMensagemNaImagem(unsigned char *dados, int largura, int altura, int 
         {
             unsigned char caractere;
             caractere = mensagem[indice_mensagem];
-            unsigned char parte_mensagem = extract_bits(caractere, 0, 2);
 
-            verde = set_bits(verde, 0, 2, parte_mensagem);
+            unsigned char parte_mensagem_1 = extract_bits(caractere, 0, 2);
+            unsigned char parte_mensagem_2 = extract_bits(caractere, 2, 3);
+            unsigned char parte_mensagem_3 = extract_bits(caractere, 5, 3);
 
+            vermelho = set_bits(vermelho, 0, 2, parte_mensagem_1);
+            verde = set_bits(verde, 0, 3, parte_mensagem_2);
+            azul = set_bits(azul, 0, 3, parte_mensagem_3);
+
+            dados[i] = vermelho;
             dados[i + 1] = verde;
+            dados[i + 2] = azul;
 
             if (indice_mensagem == tamanho_mensagem)
             {
-               
+
                 break;
             }
         }
@@ -72,6 +79,8 @@ bool ocultarMensagemNaImagem(unsigned char *dados, int largura, int altura, int 
 
         indice_mensagem++;
     }
+
+    std::cout << "O tamanho da mensagem é: " << tamanho_mensagem << std::endl;
     return true;
 }
 
